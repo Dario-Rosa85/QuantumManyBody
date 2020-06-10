@@ -10,7 +10,9 @@
 
 (* :Package Version: 1.0 *)
 
-(* :Copyright: \[Copyright] Dario Rosa 
+(* :Copyright: 
+
+   Copyright 2020 QuantumManyBody (https://github.com/Dario-Rosa85/QuantumManyBody) 
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,7 +28,7 @@
 *)
 
 (* :Keywords:
-    QMB , Hamiltonians , PartialTraces
+    QMB , Hamiltonians , PartialTraces, QITE
 *)
 
 (* :Summary:
