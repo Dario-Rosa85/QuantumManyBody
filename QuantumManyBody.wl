@@ -39,6 +39,8 @@ many-body systems.
 
 BeginPackage["QuantumManyBody`"]
 
+GammaMatrices::usage = "GammaMatrices[n] produces a set of 2 * n gamma matrices, \!\(\*SuperscriptBox[\(\[Gamma]\), \(i\)]\), satisfying the algebra {\!\(\*SuperscriptBox[\(\[Gamma]\), \(\(i\)\(\\\ \)\)]\), \!\(\*SuperscriptBox[\(\[Gamma]\), \(j\)]\)} = 2 \!\(\*SuperscriptBox[\(\[Delta]\), \(ij\)]\)."
+
 EnergyStored::usage = "EnergyStored[x , hamiltonian] computes numerically the mean value of hamiltonian in the state x."
 
 EvolvedStateList::usage = "EvolvedStateList[stateIn , hamiltonian , tMin , tMax , nPoints] computes the time evolution of stateIn, from tMin to tMax, with the hamiltonian and with nPoints intermediate 
@@ -68,7 +70,7 @@ hamiltonianSpinChain is the total Hamiltonian: hamiltonianSpinChain = Total @ Fl
 QITE::usage = "QITE[latticeSize , hamiltonianDecomposed , listCouplings , \[Beta] , \[CapitalDelta]t , initialState_ , dD , toleranceNumeric :10^-6 , deltaDiagonal : 0.1] performs the quantum version of the imaginary time evolution of initialState, up to imaginary time \[Beta] (with a time step \[CapitalDelta]t) with a Trotterized hamiltonian given by hamiltonianDecomposed. 
 Each term of the Trotterized Hamiltonian takes the form of hamiltonianDecomposed[[pos1 , pos2]] where pos1 denotes the sites of the spin chain involved and pos2 keeps into account of how many terms have the same support.
 The list listCouplings takes into account all the connections among different sites of the underlying spin chain (we have Length @ listCouplings equal to Length @ hamiltonianDecomposed).
-dD takes sets the domain of the unitary approximation of non-unitary operator Exp[- \[CapitalDelta]t * hamiltonianDecomposed[[pos1 , pos2]]] should be."
+dD sets how larger the domain of the unitary approximation of non-unitary operator Exp[- \[CapitalDelta]t * hamiltonianDecomposed[[pos1 , pos2]]] should be."
 
 Begin["`Private`"]
 
@@ -109,6 +111,8 @@ If[(DeleteDuplicates @ elementsRemoved == elementsRemoved) && (DeleteDuplicates 
 ]
 
 parityFunc[i_] := (1 + ((-1)^i) )/2;
+
+GammaMatrices[n_] := Return[( toMat @ PadRight[PadLeft[If[OddQ @ # , {s1} , {s2}] , IntegerPart[(# - 0.1)/2] + 1 , s3] , n , id] &) /@ Range[2 * n]] 
 
 EnergyStored[x_List , hamiltonian_] := Return[Conjugate[x] . hamiltonian . x]
 
@@ -177,7 +181,7 @@ Return @ {hamiltonianSpinChainUnitaries , hamiltonianSpinChain}
 
 QITE[latticeSize_ , hamiltonianDecomposed_ , listCouplings_ , \[Beta]_ , \[CapitalDelta]t_ , initialState_ , dD_ , toleranceNumeric_ :10^-6 , deltaDiagonal_ : 0.1] := Block[{sS , identityOperator , listHamiltonianIndices , evolvedState  , length = 2^latticeSize},
 
-sS = Partition[( toMat @ PadRight[PadLeft[{#2} , #1 , id] ,latticeSize , id]  &) @@@ Tuples[{Range @ latticeSize , {s1 , s2 , s3}}] , 3];
+sS = Partition[(toMat @ PadRight[PadLeft[{#2} , #1 , id] ,latticeSize , id]  &) @@@ Tuples[{Range @ latticeSize , {s1 , s2 , s3}}] , 3];
 identityOperator =SparseArray[( {# , #} -> 1 &) /@ Range @ length , {length , length} , 0];
 
 listHamiltonianIndices = Catenate[(Reverse @ Flatten[Function[{x , y} ,({x , #} &) /@  Range @ y ]@@@ Transpose @ {Range @ Length @ hamiltonianDecomposed , Length /@ hamiltonianDecomposed} , 1] &) /@ Range[\[Beta] /\[CapitalDelta]t]];
@@ -189,7 +193,7 @@ Return[Transpose @ {Range[0 , \[Beta] , \[CapitalDelta]t] , Extract[Normal @ evo
 
 End[]  (* QuantumManyBody`Private`*)
 
-Protect[EnergyStored , EvolvedStateList , FindGroundState , FindBandwidth , PartialTrace , EntanglementEntropy , XCouplingRegular , SYKHamiltonian , SYKHamiltonianBoson , SpinChainHamiltonian , QITE] (* Protect names of new functions*)
+Protect[GammaMatrices , EnergyStored , EvolvedStateList , FindGroundState , FindBandwidth , PartialTrace , EntanglementEntropy , XCouplingRegular , SYKHamiltonian , SYKHamiltonianBoson , SpinChainHamiltonian , QITE] (* Protect names of new functions*)
 
 EndPackage[] (* QuantumManyBody` *)
 
