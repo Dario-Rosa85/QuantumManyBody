@@ -67,7 +67,7 @@ SpinChainHamiltonian::usage = "SpinChainHamiltonian[listCouplings , listCoeffici
 The output is given as {hamiltonianSpinChainUnitaries , hamiltonianSpinChain}. hamiltonianSpinChainUnitaries contains each term of the decomposition in operators proportional to unitaries {{\!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(x\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(y\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(z\)]\)}, ... , {\!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(x\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(y\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(z\)]\)}}, with L = Length @ listCouplings.
 hamiltonianSpinChain is the total Hamiltonian: hamiltonianSpinChain = Total @ Flatten[hamiltonianSpinChainUnitaries , 1]."
 
-QITE::usage = "QITE[latticeSize , hamiltonianDecomposed , listCouplings , \[Beta] , \[CapitalDelta]t , initialState_ , dD , toleranceNumeric :10^-6 , deltaDiagonal : 0.1] performs the quantum version of the imaginary time evolution of initialState, up to imaginary time \[Beta] (with a time step \[CapitalDelta]t) with a Trotterized hamiltonian given by hamiltonianDecomposed. 
+QITE::usage = "QITE[latticeSize , hamiltonianDecomposed , listCouplings , \[Beta] , \[CapitalDelta]t , initialState , dD , toleranceNumeric :10^-6 , deltaDiagonal : 0.1] performs the quantum version of the imaginary time evolution of initialState, up to imaginary time \[Beta] (with a time step \[CapitalDelta]t) with a Trotterized hamiltonian given by hamiltonianDecomposed. 
 Each term of the Trotterized Hamiltonian takes the form of hamiltonianDecomposed[[pos1 , pos2]] where pos1 denotes the sites of the spin chain involved and pos2 keeps into account of how many terms have the same support.
 The list listCouplings takes into account all the connections among different sites of the underlying spin chain (we have Length @ listCouplings equal to Length @ hamiltonianDecomposed).
 dD sets how larger the domain of the unitary approximation of non-unitary operator Exp[- \[CapitalDelta]t * hamiltonianDecomposed[[pos1 , pos2]]] should be."
@@ -85,7 +85,7 @@ evolutionFunction[stateIn_ , hamiltonian_ , \[CapitalDelta]_] := Return[MatrixEx
 
 stepEvolutionQITE[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , deltaDiagonal_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
 unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];
-\[CapitalDelta] = - hTrotterStep . initialKet;
+\[CapitalDelta] = (- hTrotterStep + (Conjugate @ initialKet . hTrotterStep . initialKet) * identityOperator) . initialKet;
 {sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
 sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &)/@ sSMatHalf  , toleranceNumeric];
 aAOperator = SparseArray[Chop[Total[LeastSquares[(sSMat + Transpose @ sSMat) + deltaDiagonal *  IdentityMatrix[Length @ bB] , - bB ] * unitaryOperatorsExtended] ,toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
