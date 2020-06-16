@@ -39,6 +39,8 @@ many-body systems.
 
 BeginPackage["QuantumManyBody`"]
 
+SpinOperators::usage = "SpinOperators[L] produces a set of spin operators, \!\(\*SubsuperscriptBox[\(\[Sigma]\), \(i\), \(a\)]\), for a spin chain of length L."
+
 GammaMatrices::usage = "GammaMatrices[n] produces a set of 2 * n gamma matrices, \!\(\*SuperscriptBox[\(\[Gamma]\), \(i\)]\), satisfying the algebra {\!\(\*SuperscriptBox[\(\[Gamma]\), \(\(i\)\(\\\ \)\)]\), \!\(\*SuperscriptBox[\(\[Gamma]\), \(j\)]\)} = 2 \!\(\*SuperscriptBox[\(\[Delta]\), \(ij\)]\)."
 
 EnergyStored::usage = "EnergyStored[x , hamiltonian] computes numerically the mean value of hamiltonian in the state x."
@@ -111,6 +113,8 @@ If[(DeleteDuplicates @ elementsRemoved == elementsRemoved) && (DeleteDuplicates 
 ]
 
 parityFunc[i_] := (1 + ((-1)^i) )/2;
+
+SpinOperators[latticeSize_] := Return[Partition[(toMat @ PadRight[PadLeft[{#2} , #1 , id] ,latticeSize , id]  &) @@@ Tuples[{Range @ latticeSize , {s1 , s2 , s3}}] , 3]]
 
 GammaMatrices[n_] := Return[( toMat @ PadRight[PadLeft[If[OddQ @ # , {s1} , {s2}] , IntegerPart[(# - 0.1)/2] + 1 , s3] , n , id] &) /@ Range[2 * n]] 
 
@@ -193,7 +197,7 @@ Return[Transpose @ {Range[0 , \[Beta] , \[CapitalDelta]t] , Extract[Normal @ evo
 
 End[]  (* QuantumManyBody`Private`*)
 
-Protect[GammaMatrices , EnergyStored , EvolvedStateList , FindGroundState , FindBandwidth , PartialTrace , EntanglementEntropy , XCouplingRegular , SYKHamiltonian , SYKHamiltonianBoson , SpinChainHamiltonian , QITE] (* Protect names of new functions*)
+Protect[GammaMatrices , SpinOperators , EnergyStored , EvolvedStateList , FindGroundState , FindBandwidth , PartialTrace , EntanglementEntropy , XCouplingRegular , SYKHamiltonian , SYKHamiltonianBoson , SpinChainHamiltonian , QITE] (* Protect names of new functions*)
 
 EndPackage[] (* QuantumManyBody` *)
 
