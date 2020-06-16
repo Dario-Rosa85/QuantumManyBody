@@ -18,7 +18,7 @@
 
   - `EnergyStored`: this function, provided a ket and an observable, computes the mean value of the observable in the given state.
 
-  - `FindBandWidth`: this function, given an observable, computes its bandwidth, i.e. the difference between the maximum and the minimum eigenvalue
+  - `FindBandWidth`: this function, given an observable, computes its bandwidth, i.e. the difference between the maximum and the minimum eigenvalues.
 
   - `QITE`: this function implements a quantum version of the imaginary time evolution algorithm to find the ground state of a given Hamiltonian.
 
