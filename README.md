@@ -13,3 +13,9 @@
  #### Version 0.1
 
   - Initial release.
+
+ ## References
+
+ The quantum imaginary time evolution (QITE) function, makes use of the results of
+
+ #### [Motta, M. et al. (2019), "Determining eigenstates and thermal states on a quantum computer using quantum imaginary time evolution" , Nature Physics, 16(2), 205–210.](https://www.nature.com/articles/s41567-019-0704-4)
