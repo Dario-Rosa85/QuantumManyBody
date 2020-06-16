@@ -12,25 +12,25 @@
 
  The main functions included so far in the package are
 
-  #### `SpinChainHamiltonian`: this function receives a graph (or an hyper-graph), a corresponding set of coupling constants and provides a spin-chain Hamiltonian defined on the graph with the couplings assigned. It also gives a Suzuki-Trotter decomposition of the same Hamiltonian.
+  - `SpinChainHamiltonian`: this function receives a graph (or an hyper-graph), a corresponding set of coupling constants and provides a spin-chain Hamiltonian defined on the graph with the couplings assigned. It also gives a Suzuki-Trotter decomposition of the same Hamiltonian.
 
-  #### `FindGroundState`: this function, provided an Hamiltonian, computes the corresponding ground state.
+  - `FindGroundState`: this function, provided an Hamiltonian, computes the corresponding ground state.
 
-  #### `EnergyStored`: this function, provided a ket and an observable, compute the mean value of the observable in the given state.
+  - `EnergyStored`: this function, provided a ket and an observable, compute the mean value of the observable in the given state.
 
-  #### `FindBandWidth`: this function, given an observable, computes its bandwidth, i.e. the difference between the maximum and the minimum eigenvalue
+  - `FindBandWidth`: this function, given an observable, computes its bandwidth, i.e. the difference between the maximum and the minimum eigenvalue
 
-  #### `QITE`: this function implement a quantum version of the imaginary time evolution algorithm to find the ground state of a given Hamiltonian.
+  - `QITE`: this function implement a quantum version of the imaginary time evolution algorithm to find the ground state of a given Hamiltonian.
 
-  #### `EvolvedStateList`: this function compute the time evolution of a given initial state, as dictated by a given Hamiltonian.
+  - `EvolvedStateList`: this function compute the time evolution of a given initial state, as dictated by a given Hamiltonian.
 
-  #### `PartialTrace`: this function, given a certain pure state and a bi-partition of the spin chain on which the state is defined, computes the mixed state resulting by tracing out the degrees of freedom belonging to one of the subsystems.
+  - `PartialTrace`: this function, given a certain pure state and a bi-partition of the spin chain on which the state is defined, computes the mixed state resulting by tracing out the degrees of freedom belonging to one of the subsystems.
 
-  #### `EntanglementEntropy`: this function computes the entanglement entropy associated to a given density matrix.
+  - `EntanglementEntropy`: this function computes the entanglement entropy associated to a given density matrix.
 
-  #### `GammaMatrices`: this function produces a set of Majorana operators.
+  - `GammaMatrices`: this function produces a set of Majorana operators.
 
-  #### `SYKHamiltonian`: this function generates the SYK Hamiltonian for a system of Majorana fermions.
+  - `SYKHamiltonian`: this function generates the SYK Hamiltonian for a system of Majorana fermions.
 
  ## Revision history
 
