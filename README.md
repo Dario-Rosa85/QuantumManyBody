@@ -6,7 +6,7 @@
 
  An auxiliary Mathematica notebook, containing some examples of usage, is also included. This notebook can be seen as a tutorial which explains the main functionalities provided by the package.
 
- Of course, the package is still in its first version. For any bugs or suggestions, you may contact me at [dario.rosa85@gmail.com](dario.rosa85@gmail.com).
+ Of course, the package is still in its first version. For any bugs or suggestions, you may contact me at [dario.rosa85@gmail.com](mailto:dario.rosa85@gmail.com).
 
  ## Revision history
 
