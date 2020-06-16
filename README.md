@@ -16,13 +16,13 @@
 
   - `FindGroundState`: this function, provided an Hamiltonian, computes the corresponding ground state.
 
-  - `EnergyStored`: this function, provided a ket and an observable, compute the mean value of the observable in the given state.
+  - `EnergyStored`: this function, provided a ket and an observable, computes the mean value of the observable in the given state.
 
   - `FindBandWidth`: this function, given an observable, computes its bandwidth, i.e. the difference between the maximum and the minimum eigenvalue
 
-  - `QITE`: this function implement a quantum version of the imaginary time evolution algorithm to find the ground state of a given Hamiltonian.
+  - `QITE`: this function implements a quantum version of the imaginary time evolution algorithm to find the ground state of a given Hamiltonian.
 
-  - `EvolvedStateList`: this function compute the time evolution of a given initial state, as dictated by a given Hamiltonian.
+  - `EvolvedStateList`: this function computes the time evolution of a given initial state, as dictated by a given Hamiltonian.
 
   - `PartialTrace`: this function, given a certain pure state and a bi-partition of the spin chain on which the state is defined, computes the mixed state resulting by tracing out the degrees of freedom belonging to one of the subsystems.
 
