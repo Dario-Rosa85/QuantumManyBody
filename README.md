@@ -12,6 +12,8 @@
 
  The main functions included so far in the package are
 
+  - `SpinOperators`: this function defines the spin operators on a spin chain of given length.
+
   - `SpinChainHamiltonian`: this function receives a graph (or an hyper-graph), a corresponding set of coupling constants and provides a spin-chain Hamiltonian defined on the graph with the couplings assigned. It also gives a Suzuki-Trotter decomposition of the same Hamiltonian.
 
   - `FindGroundState`: this function, provided an Hamiltonian, computes the corresponding ground state.
