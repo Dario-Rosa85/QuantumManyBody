@@ -87,22 +87,22 @@ toMat[list_] := KroneckerProduct @@ (list /. {s1 -> SparseArray @ PauliMatrix @ 
 
 evolutionFunction[stateIn_ , hamiltonian_ , \[CapitalDelta]_] := Return[MatrixExp[- I * hamiltonian * \[CapitalDelta] , stateIn]]
 
-leastSquaresQITEUncompiled[sSMat_ , bB_ , deltaDiagonal_]:=LeastSquares[(sSMat + Transpose @ sSMat) + deltaDiagonal *  IdentityMatrix[Length @ bB] , - bB , Tolerance -> 10^(-8)]
+leastSquaresQITEUncompiled[sSMat_ , bB_ , deltaDiagonal_] := LeastSquares[(sSMat + Transpose @ sSMat) + deltaDiagonal *  IdentityMatrix[Length @ bB] , - bB]
 
-leastSquaresQITECompiled = Compile[{{sSMat , _Complex , 2} , {bB , _Complex , 1} , {deltaDiagonal , _Real}},leastSquaresQITEUncompiled[sSMat  , bB , deltaDiagonal] , {{leastSquaresQITEUncompiled[_ , _ , _],_Complex , 1}} , CompilationTarget->"C" , RuntimeAttributes->{Listable},Parallelization->True];
+leastSquaresQITECompiled = Compile[{{sSMat , _Complex , 2} , {bB , _Complex , 1} , {deltaDiagonal , _Real}} , leastSquaresQITEUncompiled[sSMat , bB , deltaDiagonal] , {{leastSquaresQITEUncompiled[_ , _ , _] , _Complex , 1}} , CompilationTarget -> "C" , RuntimeAttributes -> {Listable} , Parallelization -> True];
 
 stepEvolutionQITECompiled[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , deltaDiagonal_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
 If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Function[{sites} , Dot @@@ Apply[(sS[[#1 , #2]]&) , Select[Tuples @ Partition[Tuples[{sites , {1 , 2 , 3}}] , 3] , OddQ @ Count[Last @ Transpose @ # , 2] &], {2}]] /@ sitesExtended , 1];) ,  (unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];)];
-\[CapitalDelta] = (- hTrotterStep + (Conjugate @ initialKet . hTrotterStep . initialKet) * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
+\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
 {sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
-sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &)/@ sSMatHalf  , toleranceNumeric];
-aAOperator = SparseArray[Chop[Total[leastSquaresQITECompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] ,toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
+sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &) /@ sSMatHalf , toleranceNumeric];
+aAOperator = SparseArray[Chop[Total[leastSquaresQITECompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] , toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
 Return[Chop[ MatrixExp[-I * \[CapitalDelta]t * aAOperator , initialKet] , toleranceNumeric]]
 ]
 
 stepEvolutionQITEUncompiled[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , deltaDiagonal_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
 If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Function[{sites} , Dot @@@ Apply[(sS[[#1 , #2]]&) , Select[Tuples @ Partition[Tuples[{sites , {1 , 2 , 3}}] , 3] , OddQ @ Count[Last @ Transpose @ # , 2] &], {2}]] /@ sitesExtended , 1];) ,  (unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];)];
-\[CapitalDelta] = (- hTrotterStep + (Conjugate @ initialKet . hTrotterStep . initialKet) * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
+\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
 {sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
 sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &)/@ sSMatHalf  , toleranceNumeric];
 aAOperator = SparseArray[Chop[Total[leastSquaresQITEUncompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] ,toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
