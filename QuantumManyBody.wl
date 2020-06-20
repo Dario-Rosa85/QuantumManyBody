@@ -74,6 +74,8 @@ Each term of the Trotterized Hamiltonian takes the form of hamiltonianDecomposed
 The list listCouplings takes into account all the connections among different sites of the underlying spin chain (we have Length @ listCouplings equal to Length @ hamiltonianDecomposed).
 dD sets how larger the domain of the unitary approximation of non-unitary operator Exp[- \[CapitalDelta]t * hamiltonianDecomposed[[pos1 , pos2]]] should be. The function can be optionally compiled."
 
+
+
 Begin["`Private`"]
 
 s1 = Symbol["s1"];
@@ -85,8 +87,7 @@ toMat[list_] := KroneckerProduct @@ (list /. {s1 -> SparseArray @ PauliMatrix @ 
 
 evolutionFunction[stateIn_ , hamiltonian_ , \[CapitalDelta]_] := Return[MatrixExp[- I * hamiltonian * \[CapitalDelta] , stateIn]]
 
-leastSquaresQITEUncompiled[sSMat_ , bB_ , deltaDiagonal_]:=LeastSquares[(sSMat + Transpose @ sSMat) + deltaDiagonal *  IdentityMatrix[Length @ bB] , - bB ]
-
+leastSquaresQITEUncompiled[sSMat_ , bB_ , deltaDiagonal_]:=LeastSquares[(sSMat + Transpose @ sSMat) + deltaDiagonal *  IdentityMatrix[Length @ bB] , - bB , Tolerance -> 10^(-8)]
 
 leastSquaresQITECompiled = Compile[{{sSMat , _Complex , 2} , {bB , _Complex , 1} , {deltaDiagonal , _Real}},leastSquaresQITEUncompiled[sSMat  , bB , deltaDiagonal] , {{leastSquaresQITEUncompiled[_ , _ , _],_Complex , 1}} , CompilationTarget->"C" , RuntimeAttributes->{Listable},Parallelization->True];
 
