@@ -96,7 +96,7 @@ If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Functi
 \[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
 {sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
 sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &) /@ sSMatHalf , toleranceNumeric];
-aAOperator = SparseArray[Chop[Total[leastSquaresQITECompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] , toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
+aAOperator = Chop[Total[leastSquaresQITECompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] , toleranceNumeric];
 Return[Chop[ MatrixExp[-I * \[CapitalDelta]t * aAOperator , initialKet] , toleranceNumeric]]
 ]
 
@@ -105,7 +105,7 @@ If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Functi
 \[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
 {sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
 sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &)/@ sSMatHalf  , toleranceNumeric];
-aAOperator = SparseArray[Chop[Total[leastSquaresQITEUncompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] ,toleranceNumeric] , {Length @ initialKet , Length @ initialKet} , 0];
+aAOperator = Chop[Total[leastSquaresQITEUncompiled[sSMat , bB , deltaDiagonal] * unitaryOperatorsExtended] ,toleranceNumeric];
 Return[Chop[ MatrixExp[-I * \[CapitalDelta]t * aAOperator , initialKet] , toleranceNumeric]]
 ]
 
@@ -207,7 +207,7 @@ listHamiltonianIndices = Catenate[(Reverse @ Flatten[Function[{x , y} ,({x , #} 
 
 If[compiled == "True" ,(evolvedState = FoldList[Function[{x , y} , stepEvolutionQITECompiled[x , hamiltonianDecomposed[[First @ y , Last @ y]] , DeleteCases[(Mod[Range[#- dD , # + dD] , latticeSize , 1] &) /@ listCouplings[[First @ y]]//Flatten //DeleteDuplicates // Subsets , {}], sS , identityOperator , toleranceNumeric , deltaDiagonal , \[CapitalDelta]t]] , Normal @ initialState , listHamiltonianIndices];) , (evolvedState = FoldList[Function[{x , y} , stepEvolutionQITEUncompiled[x , hamiltonianDecomposed[[First @ y , Last @ y]] , DeleteCases[(Mod[Range[#- dD , # + dD] , latticeSize , 1] &) /@ listCouplings[[First @ y]]//Flatten //DeleteDuplicates // Subsets , {}], sS , identityOperator , toleranceNumeric , deltaDiagonal , \[CapitalDelta]t]] , Normal @ initialState , listHamiltonianIndices];)];
 
-Return[Transpose @ {Range[0 , \[Beta] , \[CapitalDelta]t] , Extract[Normal @ evolvedState , Partition[Range[1 , Length @ evolvedState , Length @ Flatten[hamiltonianDecomposed , 1]] , 1]]}]
+Return[Transpose @ {Range[0 , \[Beta] , \[CapitalDelta]t] , Extract[evolvedState , Partition[Range[1 , Length @ evolvedState , Length @ Flatten[hamiltonianDecomposed , 1]] , 1]]}]
 ]
 
 End[]  (* QuantumManyBody`Private`*)
