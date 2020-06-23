@@ -91,11 +91,11 @@ leastSquaresQITE[sSMat_ , bB_ ] := LeastSquares[(sSMat + Transpose @ sSMat) , - 
 
 stepEvolutionQITE[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
 If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Function[{sites} , Dot @@@ Apply[(sS[[#1 , #2]]&) , Select[Tuples @ Partition[Tuples[{sites , {1 , 2 , 3}}] , 3] , OddQ @ Count[Last @ Transpose @ # , 2] &], {2}]] /@ sitesExtended , 1];) ,  (unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];)];
-\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; (* expansion at the first order in \[CapitalDelta]t *)
-{sSMatHalf , bB} = (Chop[{# . initialKet , -2 Im[Conjugate @ initialKet . Conjugate @ # . \[CapitalDelta]]} , toleranceNumeric] &)/@ unitaryOperatorsExtended // Transpose;
-sSMat =  Chop[(Level[sSMatHalf , 1] . Conjugate @ # &)/@ sSMatHalf  , toleranceNumeric];
-aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] ,toleranceNumeric];
-Return[Chop[ MatrixExp[-I * \[CapitalDelta]t * aAOperator , initialKet] , toleranceNumeric]]
+\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; 
+sSMatHalf = Chop[(# . initialKet &) /@ unitaryOperatorsExtended , toleranceNumeric];
+{bB , sSMat} = (Chop[{- 2 * Im[Conjugate @ \[CapitalDelta] . #] , Level[sSMatHalf , 1] . Conjugate @ #} , toleranceNumeric] &) /@ sSMatHalf // Transpose;
+aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] , toleranceNumeric];
+Return[Chop[evolutionFunction[initialKet , aAOperator , \[CapitalDelta]t] , toleranceNumeric]]
 ]
 
 partialTrace[latticeSizeLocal_ , tracedLocal_ , \[Psi]Local_]:=Block[{reducedNumbers = 2^(latticeSizeLocal - tracedLocal) , tracedHilbert = 2^tracedLocal , vectorReduced},
