@@ -94,6 +94,11 @@ If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Functi
 \[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet (* Expansion at the first order in \[CapitalDelta]t *); 
 sSMatHalf = Chop[(# . initialKet &) /@ unitaryOperatorsExtended , toleranceNumeric];
 {bB , sSMat} = (Chop[{- 2 * Im[Conjugate @ \[CapitalDelta] . #] , Level[sSMatHalf , 1] . Conjugate @ #} , toleranceNumeric] &) /@ sSMatHalf // Transpose;
+(*
+Alternative code: slower but maybe good for parallelization
+bB = (Chop[- 2 * Im[DOTC[\[CapitalDelta] , #]] , toleranceNumeric] &) /@ sSMatHalf;
+sSMat = Partition[(Chop[Dot[Conjugate @ sSMatHalf[[#1]] , sSMatHalf[[#2]]] , toleranceNumeric] &) @@@ Tuples[Range @ Length @ sSMatHalf , 2] , Length @ sSMatHalf];
+*)
 aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] , toleranceNumeric];
 Return[Chop[evolutionFunction[initialKet , aAOperator , \[CapitalDelta]t] , toleranceNumeric]]
 ]
