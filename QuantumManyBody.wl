@@ -91,7 +91,7 @@ leastSquaresQITE[sSMat_ , bB_ ] := LeastSquares[(sSMat + Transpose @ sSMat) , - 
 
 stepEvolutionQITE[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
 If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Function[{sites} , Dot @@@ Apply[(sS[[#1 , #2]]&) , Select[Tuples @ Partition[Tuples[{sites , {1 , 2 , 3}}] , 3] , OddQ @ Count[Last @ Transpose @ # , 2] &], {2}]] /@ sitesExtended , 1];) ,  (unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];)];
-\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet; 
+\[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet (* Expansion at the first order in \[CapitalDelta]t *); 
 sSMatHalf = Chop[(# . initialKet &) /@ unitaryOperatorsExtended , toleranceNumeric];
 {bB , sSMat} = (Chop[{- 2 * Im[Conjugate @ \[CapitalDelta] . #] , Level[sSMatHalf , 1] . Conjugate @ #} , toleranceNumeric] &) /@ sSMatHalf // Transpose;
 aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] , toleranceNumeric];
