@@ -4,7 +4,7 @@
  In recent days, an increasing number of physicists with a high-energy background (or, more specifically, with a background in string theory) are getting interested in condensed matter problems and quantum computing. In the string theory community, Wolfram Mathematica is the standard programming language that people use. This package hopes to be a useful tool for string theorists who are moving to condensed matter and quantum computing problems, by providing functionalities to perform numerical computations using their favorite language. In the near future, I hope to add more support to parallel computations, in order to make this package useful also for people who want to use Mathematica to perform high performance computations.
  Moreover, I hope to add more functionalities performing quantum algorithms.
 
- An auxiliary Mathematica notebook and a Jupyter notebook as well, containing some examples of usage, are included. These notebooks can be seen as tutorials, explaining the main functionalities provided by the package.
+ An auxiliary Mathematica notebook and a Jupyter notebook as well, containing some examples of usage, are included. These notebooks can be seen as tutorials, explaining the main functionalities provided by the package. Look at the [Jupyter notebook](https://github.com/Dario-Rosa85/QuantumManyBody/blob/master/QuantumManyBody_tutorial.ipynb) for an online preview of the current functionalities.
 
  Of course, the package is still in its first version. For any bugs or suggestions, you may contact me at [dario.rosa85@gmail.com](mailto:dario.rosa85@gmail.com).
 
