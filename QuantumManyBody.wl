@@ -69,7 +69,7 @@ SpinChainHamiltonian::usage = "SpinChainHamiltonian[listCouplings , listCoeffici
 The output is given as {hamiltonianSpinChainUnitaries , hamiltonianSpinChain}. hamiltonianSpinChainUnitaries contains each term of the decomposition in operators proportional to unitaries {{\!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(x\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(y\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(1\)], \(z\)]\)}, ... , {\!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(x\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(y\)]\) , \!\(\*SuperscriptBox[SubscriptBox[\(U\), \(L\)], \(z\)]\)}}, with L = Length @ listCouplings.
 hamiltonianSpinChain is the total Hamiltonian: hamiltonianSpinChain = Total @ Flatten[hamiltonianSpinChainUnitaries , 1]."
 
-QITE::usage = "QITE[latticeSize , hamiltonianDecomposed , listCouplings , \[Beta] , \[CapitalDelta]t , initialState , dD , toleranceNumeric :10^-6] performs the quantum version of the imaginary time evolution of initialState, up to imaginary time \[Beta] (with a time step \[CapitalDelta]t) with a Trotterized hamiltonian given by hamiltonianDecomposed. 
+QITE::usage = "QITE[latticeSize , hamiltonianDecomposed , listCouplings , \[Beta] , \[CapitalDelta]t , initialState , dD , cudaCheck :False , toleranceNumeric :10^-6] performs the quantum version of the imaginary time evolution of initialState, up to imaginary time \[Beta] (with a time step \[CapitalDelta]t) with a Trotterized hamiltonian given by hamiltonianDecomposed. 
 Each term of the Trotterized Hamiltonian takes the form of hamiltonianDecomposed[[pos1 , pos2]] where pos1 denotes the sites of the spin chain involved and pos2 keeps into account of how many terms have the same support.
 The list listCouplings takes into account all the connections among different sites of the underlying spin chain (we have Length @ listCouplings equal to Length @ hamiltonianDecomposed).
 dD sets how larger the domain of the unitary approximation of non-unitary operator Exp[- \[CapitalDelta]t * hamiltonianDecomposed[[pos1 , pos2]]] should be."
@@ -94,11 +94,16 @@ If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Functi
 \[CapitalDelta] = (- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) . initialKet (* Expansion at the first order in \[CapitalDelta]t *); 
 sSMatHalf = Chop[(# . initialKet &) /@ unitaryOperatorsExtended , toleranceNumeric];
 {bB , sSMat} = (Chop[{- 2 * Im[Conjugate @ \[CapitalDelta] . #] , Level[sSMatHalf , 1] . Conjugate @ #} , toleranceNumeric] &) /@ sSMatHalf // Transpose;
-(*
-Alternative code: slower but maybe good for parallelization
-bB = (Chop[- 2 * Im[DOTC[\[CapitalDelta] , #]] , toleranceNumeric] &) /@ sSMatHalf;
-sSMat = Partition[(Chop[Dot[Conjugate @ sSMatHalf[[#1]] , sSMatHalf[[#2]]] , toleranceNumeric] &) @@@ Tuples[Range @ Length @ sSMatHalf , 2] , Length @ sSMatHalf];
-*)
+aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] , toleranceNumeric];
+Return[Chop[evolutionFunction[initialKet , aAOperator , \[CapitalDelta]t] , toleranceNumeric]]
+]
+
+stepEvolutionQITECUDA[initialKet_ , hTrotterStep_ , sitesExtended_ , sS_ , identityOperator_ , toleranceNumeric_ , \[CapitalDelta]t_]:= Block[{unitaryOperatorsExtended , \[CapitalDelta] , sSMatHalf , bB ,sSMat , aAOperator} , 
+If[Re @ hTrotterStep == hTrotterStep, (unitaryOperatorsExtended = Flatten[Function[{sites} , Dot @@@ Apply[(sS[[#1 , #2]]&) , Select[Tuples @ Partition[Tuples[{sites , {1 , 2 , 3}}] , 3] , OddQ @ Count[Last @ Transpose @ # , 2] &], {2}]] /@ sitesExtended , 1];) ,  (unitaryOperatorsExtended = Prepend[Flatten[(Dot @@@ Tuples @ sS[[#]] &)/@ sitesExtended , 1] , identityOperator];)];
+\[CapitalDelta] = CUDADot[(- hTrotterStep + Chop[EnergyStored[initialKet , hTrotterStep] , toleranceNumeric] * identityOperator) , initialKet]; (* Expansion at the first order in \[CapitalDelta]t *) 
+sSMatHalf = Chop[(CUDADot[# , initialKet] &) /@ unitaryOperatorsExtended , toleranceNumeric];
+bB = (Chop[- 2 * Im[CUDADot[\[CapitalDelta] , #]] , toleranceNumeric] &) /@ sSMatHalf;
+sSMat = Partition[(Chop[CUDADot[Conjugate @ sSMatHalf[[#1]] , sSMatHalf[[#2]]] , toleranceNumeric] &) @@@ Tuples[Range @ Length @ sSMatHalf , 2] , Length @ sSMatHalf];
 aAOperator = Chop[Total[leastSquaresQITE[sSMat , bB] * unitaryOperatorsExtended] , toleranceNumeric];
 Return[Chop[evolutionFunction[initialKet , aAOperator , \[CapitalDelta]t] , toleranceNumeric]]
 ]
@@ -192,14 +197,18 @@ hamiltonianSpinChain = SparseArray[Total @ Flatten[hamiltonianSpinChainUnitaries
 Return @ {hamiltonianSpinChainUnitaries , hamiltonianSpinChain}
 ]
 
-QITE[latticeSize_ , hamiltonianDecomposed_ , listCouplings_ , \[Beta]_ , \[CapitalDelta]t_ , initialState_ , dD_ , toleranceNumeric_ :10^-6 ] := Block[{sS , identityOperator , listHamiltonianIndices , evolvedState  , length = 2^latticeSize},
+QITE[latticeSize_ , hamiltonianDecomposed_ , listCouplings_ , \[Beta]_ , \[CapitalDelta]t_ , initialState_ , dD_ , cudaCheck_ :"False", toleranceNumeric_ :10^-6 ] := Block[{sS , identityOperator , listHamiltonianIndices , evolvedState  , length = 2^latticeSize},
 
 sS = Partition[(toMat @ PadRight[PadLeft[{#2} , #1 , id] ,latticeSize , id]  &) @@@ Tuples[{Range @ latticeSize , {s1 , s2 , s3}}] , 3];
 identityOperator =SparseArray[( {# , #} -> 1 &) /@ Range @ length , {length , length} , 0];
 
 listHamiltonianIndices = Catenate[(Reverse @ Flatten[Function[{x , y} ,({x , #} &) /@  Range @ y ]@@@ Transpose @ {Range @ Length @ hamiltonianDecomposed , Length /@ hamiltonianDecomposed} , 1] &) /@ Range[\[Beta] /\[CapitalDelta]t]];
 
-evolvedState = FoldList[Function[{x , y} , stepEvolutionQITE[x , hamiltonianDecomposed[[First @ y , Last @ y]] , DeleteCases[(Mod[Range[#- dD , # + dD] , latticeSize , 1] &) /@ listCouplings[[First @ y]]//Flatten //DeleteDuplicates // Subsets , {}], sS , identityOperator , toleranceNumeric , \[CapitalDelta]t]] , Normal @ initialState , listHamiltonianIndices];
+evolvedState = If[cudaCheck == "False" , 
+FoldList[Function[{x , y} , stepEvolutionQITE[x , hamiltonianDecomposed[[First @ y , Last @ y]] , DeleteCases[(Mod[Range[#- dD , # + dD] , latticeSize , 1] &) /@ listCouplings[[First @ y]]//Flatten //DeleteDuplicates // Subsets , {}], sS , identityOperator , toleranceNumeric , \[CapitalDelta]t]] , Normal @ initialState , listHamiltonianIndices], 
+(Needs["CUDALink`"]; 
+FoldList[Function[{x , y} , stepEvolutionQITECUDA[x , hamiltonianDecomposed[[First @ y , Last @ y]] , DeleteCases[(Mod[Range[#- dD , # + dD] , latticeSize , 1] &) /@ listCouplings[[First @ y]]//Flatten //DeleteDuplicates // Subsets , {}], sS , identityOperator , toleranceNumeric , \[CapitalDelta]t]] , Normal @ initialState , listHamiltonianIndices])
+];
 
 Return[Transpose @ {Range[0 , \[Beta] , \[CapitalDelta]t] , Extract[evolvedState , Partition[Range[1 , Length @ evolvedState , Length @ Flatten[hamiltonianDecomposed , 1]] , 1]]}]
 ]
